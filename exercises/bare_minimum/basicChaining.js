@@ -10,11 +10,34 @@
 
 var fs = require('fs');
 var Promise = require('bluebird');
+let db = Promise.promisifyAll(require('./promisification.js'));
 
+Promise.promisifyAll(fs);
 
+var nodeStyle = require('./callbackReview.js');
+var pluckFirstLineFromFileAsync = Promise.promisify(nodeStyle.pluckFirstLineFromFile)
+var getStatusCodeAsync = Promise.promisify(nodeStyle.getStatusCode)
+var pWrite = Promise.promisify(fs.writeFile)
 
-var fetchProfileAndWriteToFile = function(readFilePath, writeFilePath) {
-  // TODO
+var fetchProfileAndWriteToFile = function (readFilePath, writeFilePath) {
+  console.log('readFilePath = ', readFilePath)
+  console.log('writeFilePath = ', writeFilePath)
+
+  // look for the person in the readFilePath
+  // do a get request with the name from the file
+  // write the data received to the file path given
+
+  return pluckFirstLineFromFileAsync(readFilePath)
+    .then((name) => {
+      return db.getGitHubProfileAsync(name);
+    })
+    .then((data) => {
+      let stringData = JSON.stringify(data)
+      return pWrite(writeFilePath, stringData);
+    })
+    .catch((error) => {
+      throw (error);
+    })
 };
 
 // Export these functions so we can test them
